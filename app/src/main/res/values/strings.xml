@@ -7,9 +7,9 @@
     <string name="prompt_password">Passwort</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Anmelden</string>
-    <string name="error_invalid_email">Diese Emailadresse ist falsch</string>
-    <string name="error_invalid_password">Das Passwort ist zu kurz</string>
-    <string name="error_incorrect_password">Dieses Passwort ist falsch</string>
+    <string name="error_invalid_email">Emailadresse falsch</string>
+    <string name="error_invalid_password">Passwort zu kurz</string>
+    <string name="error_incorrect_password">Passwort falsch</string>
     <string name="error_field_required">benötigtes Feld</string>
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."

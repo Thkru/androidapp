@@ -1,8 +1,12 @@
 package com.example.ben.mygitapplication;
 
+import android.app.FragmentManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,15 +17,32 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.ben.mygitapplication.Data.User;
+import com.example.ben.mygitapplication.NavigationFragments.Fragment_Gyms;
+import com.example.ben.mygitapplication.NavigationFragments.Fragment_MyProfile;
+
+import java.security.KeyStore;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+
+    private Bundle userBundle;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        Intent intent = getIntent();
+        userBundle = new Bundle();
+        userBundle.putParcelable("userdata",intent.getParcelableExtra("userdata"));
+        PrefManager pref = new PrefManager();
+        User user= (User)intent.getParcelableExtra("userdata");
+
+        PrefManager.saveToPrefs(this,PrefManager.PREFS_LOGIN_USERNAME_KEY,user.getUsername());
+        PrefManager.saveToPrefs(this,PrefManager.PREFS_LOGIN_PASSWORD_KEY,user.getPassword());
 
 
 
@@ -73,10 +94,25 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        FragmentManager fragmentManager = getFragmentManager();
+
+
+
         if (id == R.id.nav_profile) {
-
+            Fragment_MyProfile fragMyProf = new Fragment_MyProfile();
+            fragMyProf.setArguments(userBundle);
+            fragmentManager.beginTransaction()
+                    .replace(R.id.content_frame,
+                            fragMyProf)
+                    .commit();
         } else if (id == R.id.nav_gyms) {
+            Fragment_Gyms fragGyms = new Fragment_Gyms();
+            fragGyms.setArguments(userBundle);
 
+            fragmentManager.beginTransaction()
+                    .replace(R.id.content_frame,
+                            fragGyms)
+                    .commit();
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_manage) {
