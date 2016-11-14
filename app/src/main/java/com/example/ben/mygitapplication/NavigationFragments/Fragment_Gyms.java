@@ -23,6 +23,7 @@ import android.widget.Button;
 
 import com.example.ben.mygitapplication.BackgroundWorker.NearbyPlacesTask;
 import com.example.ben.mygitapplication.Data.User;
+import com.example.ben.mygitapplication.LocationHelper;
 import com.example.ben.mygitapplication.R;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -52,13 +53,13 @@ import static android.content.Context.LOCATION_SERVICE;
  * Created by Ben on 08.11.2016.
  */
 
-public class Fragment_Gyms extends Fragment implements OnMapReadyCallback, LocationListener {
+public class Fragment_Gyms extends Fragment implements OnMapReadyCallback {
 
     private static final String TAG = "Debug";
     private static final int REQUEST_PLACE_PICKER = 1;
     View myView;
     User user;
-    Context context;
+    //Context context;
     GoogleMap gmap;
     Location currerntLocation;
     private static final int INITIAL_REQUEST = 1337;
@@ -103,49 +104,63 @@ public class Fragment_Gyms extends Fragment implements OnMapReadyCallback, Locat
     @Override
     public void onMapReady(final GoogleMap map) {
 
-
         if (Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission(this.getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this.getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-           requestPermissions(INITIAL_PERMS,INITIAL_REQUEST);
+                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        } else {
+            requestLocation();
         }
-        else{
-            gmap = map;
-            gmap.setMyLocationEnabled(true);
-            LocationManager locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-            if(currerntLocation != null) {
-                gmap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(currerntLocation.getLatitude(), currerntLocation.getLongitude())));
-                gmap.animateCamera(CameraUpdateFactory.zoomTo(14));
-                addNearPlaces();
+        gmap = map;
+
+    }
+
+
+    public void requestLocation() {
+        LocationHelper locationHelper = new LocationHelper();
+        LocationHelper.LocationResult locationResult = new LocationHelper.LocationResult() {
+            @Override
+            public void gotLocation(Location location) {
+                setMap(location);
             }
-        }
+        };
+        locationHelper.getLocation(getActivity(), locationResult);
 
     }
 
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    requestLocation();
+                } else {
+                    //permission denied
+                }
+                return;
+            }
 
-    private boolean canAccessLocation() {
-        return (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
-    }
-
-    private boolean hasPermission(String perm) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return (PackageManager.PERMISSION_GRANTED == getActivity().checkSelfPermission(perm));
-        } else
-            return true;
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        currerntLocation = location;
-        if (gmap != null) {
-            addNearPlaces();
         }
     }
-    
-    private void addNearPlaces()
-    {
-        NearbyPlacesTask nearby = new NearbyPlacesTask(String.valueOf(currerntLocation.getLongitude()), String.valueOf(currerntLocation.getLatitude()),
+
+    public void setMap(Location location) {
+        if (Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        gmap.setMyLocationEnabled(true);
+        gmap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
+        gmap.animateCamera(CameraUpdateFactory.zoomTo(14));
+        addNearPlaces(location);
+
+
+    }
+
+
+    private void addNearPlaces(Location location) {
+        NearbyPlacesTask nearby = new NearbyPlacesTask(String.valueOf(location.getLongitude()), String.valueOf(location.getLatitude()),
                 new NearbyPlacesTask.TaskListener() {
                     @Override
                     public void onFinished(JSONObject json) {
@@ -178,21 +193,6 @@ public class Fragment_Gyms extends Fragment implements OnMapReadyCallback, Locat
                 });
         nearby.execute((Void) null);
 
-    }
-
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
-        Log.d(TAG, "onStatusChanged:>>>>>>>>> ");
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-        Log.d(TAG, "onProviderEnabled:>>>>>>>>>>> ");
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-        Log.d(TAG, "onProviderDisabled: >>>>>>>>>");
     }
 }
 
